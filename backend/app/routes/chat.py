@@ -13,6 +13,8 @@
 """
 
 import os
+from backend.app.agent.builder import build_agent
+from backend.app.agent.config import ANSWER_PREFIX, QUESTION_PROMPT, WELCOME_MESSAGE
 from fastapi import APIRouter
 from pydantic import BaseModel
 from langchain_azure_ai.chat_models import AzureAIOpenAIApiChatModel
@@ -31,16 +33,13 @@ class ChatResponse(BaseModel):
 
 @router.post("", response_model=ChatResponse)
 def chat(request: ChatRequest) -> ChatResponse:
-    """Chat endpoint calling Kimi-K2.6 directly via AzureAIOpenAIApiChatModel."""
+    """Chat endpoint Anthropic."""
+    agent = build_agent()
+    print(WELCOME_MESSAGE)
     try:
-        llm = AzureAIOpenAIApiChatModel(
-            endpoint=os.getenv("AZURE_AI_INFERENCE_ENDPOINT", ""),
-            credential=os.getenv("AZURE_AI_INFERENCE_API_KEY", ""),
-            model=os.getenv("AZURE_AI_INFERENCE_MODEL", ""),
-        )
-        
-        response = llm.invoke([HumanMessage(content=request.message)])
-        reply = response.content if response else "No response from model."
+            user_input = input(f"\n{QUESTION_PROMPT}").strip()
+            answer = agent.invoke({"input": user_input})
+            reply = f"\n{ANSWER_PREFIX}{answer['output']}" if answer else "No response from model."
     except Exception as e:
         reply = f"Error: {str(e)}"
     
