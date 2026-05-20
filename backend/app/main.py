@@ -3,7 +3,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.database import Base, engine
 from app.routes import chat, health, recipes
+from app.seed import seed_db
+
+Base.metadata.create_all(bind=engine)
+seed_db()
 
 app = FastAPI(title="Carnet de recettes — API")
 
