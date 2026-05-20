@@ -1,26 +1,24 @@
-"""Endpoint de chat avec agent LangChain singleton.
+"""Endpoint de chat avec agent LangChain singleton + mémoire de session.
 
-Étape 1 : appel direct à Kimi-K2.6 via AzureAIOpenAIApiChatModel (langchain-azure-ai),
-          sans outils, qui renvoie la réponse du modèle. ✓ COMPLÉTÉ
-
-Étape 2 : transformer ça en agent LangChain avec 3 outils branchés sur app/store.py :
-          - list_recipes  → retourne la liste actuelle
-          - create_recipe → crée une nouvelle recette
-          - delete_recipe → supprime par id
-          (voir langchain.agents.create_agent)
-
-Étape 3 (stretch) : mémoire conversationnelle pour suivre une session de chat.
+Étape 1 : appel direct à Kimi-K2.6 via AzureAIOpenAIApiChatModel. ✓ COMPLÉTÉ
+Étape 2 : agent LangChain avec outils recettes. ✓ COMPLÉTÉ
+Étape 3 : mémoire conversationnelle par session_id (thread_id LangGraph). ✓ COMPLÉTÉ
 """
 
-from fastapi import APIRouter
+import time
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from app.agent import get_agent
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
+_MAX_RETRIES = 3
+_RETRY_DELAY = 2.0  # seconds (doubles each attempt)
+
 
 class ChatRequest(BaseModel):
     message: str
+    session_id: str = "default"
 
 
 class ChatResponse(BaseModel):
@@ -29,14 +27,28 @@ class ChatResponse(BaseModel):
 
 @router.post("", response_model=ChatResponse)
 def chat(request: ChatRequest) -> ChatResponse:
-    """Chat endpoint using singleton agent."""
-    try:
-        agent = get_agent()
-        result = agent.invoke({"messages": [{"role": "user", "content": request.message}]})
-        messages = result.get("messages", [])
-        reply = messages[-1].content if messages else "No response from agent."
-    except Exception as e:
-        reply = f"Error: {str(e)}"
-    
-    return ChatResponse(reply=reply)
+    """Chat endpoint using singleton agent with per-session memory."""
+    agent = get_agent()
+    config = {"configurable": {"thread_id": request.session_id}}
+    delay = _RETRY_DELAY
+
+    print(f"Received chat request: {request.message} (session: {request.session_id})")
+
+    for attempt in range(_MAX_RETRIES):
+        try:
+            result = agent.invoke(
+                {"messages": [{"role": "user", "content": request.message}]},
+                config=config,
+            )
+            messages = result.get("messages", [])
+            reply = messages[-1].content if messages else "No response from agent."
+            return ChatResponse(reply=reply)
+        except Exception as e:
+            err = str(e)
+            is_rate_limit = "429" in err or "capacity" in err.lower()
+            if is_rate_limit and attempt < _MAX_RETRIES - 1:
+                time.sleep(delay)
+                delay *= 2
+                continue
+            raise HTTPException(status_code=429 if is_rate_limit else 500, detail=err)
 
