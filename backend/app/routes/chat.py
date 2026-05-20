@@ -1,4 +1,4 @@
-"""Endpoint de chat avec appel direct à Kimi-K2.6.
+"""Endpoint de chat avec agent LangChain singleton.
 
 Étape 1 : appel direct à Kimi-K2.6 via AzureAIOpenAIApiChatModel (langchain-azure-ai),
           sans outils, qui renvoie la réponse du modèle. ✓ COMPLÉTÉ
@@ -12,13 +12,9 @@
 Étape 3 (stretch) : mémoire conversationnelle pour suivre une session de chat.
 """
 
-import os
-from backend.app.agent.builder import build_agent
-from backend.app.agent.config import ANSWER_PREFIX, QUESTION_PROMPT, WELCOME_MESSAGE
 from fastapi import APIRouter
 from pydantic import BaseModel
-from langchain_azure_ai.chat_models import AzureAIOpenAIApiChatModel
-from langchain_core.messages import HumanMessage
+from app.agent import get_agent
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -33,13 +29,12 @@ class ChatResponse(BaseModel):
 
 @router.post("", response_model=ChatResponse)
 def chat(request: ChatRequest) -> ChatResponse:
-    """Chat endpoint Anthropic."""
-    agent = build_agent()
-    print(WELCOME_MESSAGE)
+    """Chat endpoint using singleton agent."""
     try:
-            user_input = input(f"\n{QUESTION_PROMPT}").strip()
-            answer = agent.invoke({"input": user_input})
-            reply = f"\n{ANSWER_PREFIX}{answer['output']}" if answer else "No response from model."
+        agent = get_agent()
+        result = agent.invoke({"messages": [{"role": "user", "content": request.message}]})
+        messages = result.get("messages", [])
+        reply = messages[-1].content if messages else "No response from agent."
     except Exception as e:
         reply = f"Error: {str(e)}"
     

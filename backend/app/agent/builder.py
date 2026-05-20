@@ -1,16 +1,18 @@
 """Constructeur de l'agent."""
 
-from langchain.agents import AgentExecutor, create_tool_calling_agent
-from langchain_anthropic import ChatAnthropic
-from config import API_KEY, MODEL_NAME
-from agent.prompts import get_agent_prompt
-from tools.recipies import create_tool, delete_byid_tool, get_byid_tool, getall_tool
+import os
+from langchain.agents import create_agent
+from langchain_azure_ai.chat_models import AzureAIOpenAIApiChatModel
+from .prompts import SYSTEM_PROMPT
+from app.tools.recipes import create_recipe_tool, list_recipes_tool, delete_recipe_tool, get_recipe_by_id_tool
 
 
-def build_agent() -> AgentExecutor:
-    """Construit et retourne l'agent exécuteur."""
-    llm = ChatAnthropic(model=MODEL_NAME, api_key=API_KEY)
-    tools = [create_tool, delete_byid_tool, get_byid_tool, getall_tool]
-    prompt = get_agent_prompt()
-    agent = create_tool_calling_agent(llm, tools, prompt)
-    return AgentExecutor(agent=agent, tools=tools, verbose=True)
+def build_agent():
+    """Construit et retourne l'agent LangChain 1.x."""
+    llm = AzureAIOpenAIApiChatModel(
+        endpoint=os.getenv("AZURE_AI_INFERENCE_ENDPOINT", ""),
+        credential=os.getenv("AZURE_AI_INFERENCE_API_KEY", ""),
+        model=os.getenv("AZURE_AI_INFERENCE_MODEL", ""),
+    )
+    tools = [create_recipe_tool, list_recipes_tool, delete_recipe_tool, get_recipe_by_id_tool]
+    return create_agent(llm, tools=tools, system_prompt=SYSTEM_PROMPT)
