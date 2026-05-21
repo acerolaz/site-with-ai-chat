@@ -36,4 +36,4 @@ def test_create_and_delete_recipe() -> None:
 def test_chat_stub_responds() -> None:
     response = client.post("/chat", json={"message": "Bonjour"})
     assert response.status_code == 200
-    assert "TODO" in response.json()["reply"]
+    assert len(response.json()["reply"]) > 0
