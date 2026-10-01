@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { sendChat } from "@/lib/api";
 
 type Message = { role: "user" | "assistant"; content: string };
 
 export default function ChatPanel({ onMutation }: { onMutation?: () => void }) {
+  const sessionId = useRef(crypto.randomUUID());
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,7 +19,7 @@ export default function ChatPanel({ onMutation }: { onMutation?: () => void }) {
     setInput("");
     setLoading(true);
     try {
-      const { reply } = await sendChat(userMsg.content);
+      const { reply } = await sendChat(userMsg.content, sessionId.current);
       setMessages((m) => [...m, { role: "assistant", content: reply }]);
       onMutation?.();
     } catch (e) {

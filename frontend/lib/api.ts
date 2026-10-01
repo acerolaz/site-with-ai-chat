@@ -27,11 +27,11 @@ export async function deleteRecipe(id: number): Promise<void> {
   if (!res.ok) throw new Error("Échec suppression");
 }
 
-export async function sendChat(message: string): Promise<{ reply: string }> {
+export async function sendChat(message: string, sessionId: string): Promise<{ reply: string }> {
   const res = await fetch(`${API_URL}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({ message, session_id: sessionId }),
   });
   if (!res.ok) throw new Error("Échec chat");
   return res.json();
