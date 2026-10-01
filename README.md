@@ -91,10 +91,10 @@ L'agent a accès à **la mémoire de conversation** : chaque utilisateur a une `
 
 | Outil | Signature | Exemple | Cas d'usage |
 |-------|-----------|---------|-------------|
-| **`list_recipes`** | `() → str (JSON)` | `"Quelles recettes as-tu ?"` | Énumère toutes les recettes en base |
-| **`get_recipe_by_id`** | `(id: int) → str (JSON)` | `"Montre-moi la recette #2"` | Récupère les détails d'une recette |
-| **`create_recipe`** | `(name: str, ingredients: list) → str` | `"Ajoute une recette 'Crêpes' avec ...` | Crée une nouvelle recette en base |
-| **`delete_recipe`** | `(id: int) → str` | `"Supprime la recette #1"` | Supprime une recette |
+| **`list_recipes_tool`** | `() → str (JSON)` | `"Quelles recettes as-tu ?"` | Énumère toutes les recettes en base |
+| **`get_recipe_by_id_tool`** | `(id: int) → str (JSON)` | `"Montre-moi la recette #2"` | Récupère les détails d'une recette |
+| **`create_recipe_tool`** | `(name: str, ingredients: list) → str` | `"Ajoute une recette 'Crêpes' avec ...` | Crée une nouvelle recette en base |
+| **`delete_recipe_tool`** | `(id: int) → str` | `"Supprime la recette #1"` | Supprime une recette |
 
 Chaque outil :
 - Communique avec le **store PostgreSQL** (`app/store.py` → `SessionLocal` → `RecipeModel`)
