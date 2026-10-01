@@ -5,7 +5,15 @@ from app.store import delete_recipe as store_delete_recipe
 
 
 @tool
-def delete_recipe_tool(recipe_id: int) -> str:
-    """Tool to delete a recipe by its ID."""
+def delete_recipe_tool(recipe_id: int) -> dict:
+    """Outil pour supprimer une recette par son identifiant."""
     success = store_delete_recipe(recipe_id)
-    return f"Recipe {recipe_id} {'deleted successfully' if success else 'not found'}."
+    return {
+        "success": success,
+        "recipe_id": recipe_id,
+        "message": (
+            f"Recette {recipe_id} supprimée avec succès."
+            if success
+            else f"Recette {recipe_id} introuvable."
+        ),
+    }
