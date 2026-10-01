@@ -125,8 +125,8 @@ L'utilisateur tape : **"Crée une recette 'Tarte à la fraise' avec fraises, pâ
 ### Mémoire conversationnelle
 
 - **Frontend** : génère un `session_id` unique (UUID) au premier chargement du `ChatPanel`, le réutilise pour tous les messages
-- **Backend** : passe ce `session_id` comme `thread_id` à la mémoire de l'agent (`MemorySaver`)
-- **LangGraph** : stocke automatiquement l'historique des messages par `thread_id`, so l'agent "se souvient"
+- **Backend** : passe ce `session_id` comme `thread_id` à la mémoire de l'agent (`InMemorySaver`)
+- **LangGraph** : stocke automatiquement l'historique des messages par `thread_id`, donc l'agent "se souvient"
 
 Exemple :
 ```
