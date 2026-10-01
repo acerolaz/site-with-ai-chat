@@ -7,9 +7,25 @@ from app.store import get_recipe as store_get_recipe
 
 @tool
 def get_recipe_by_id_tool(recipe_id: int) -> str:
-    """Tool to get a recipe by its ID."""
+    """Outil pour récupérer une recette par son ID."""
     recipe = store_get_recipe(recipe_id)
     if recipe is None:
-        return f"Recipe with ID {recipe_id} not found."
-    
-    return json.dumps({"id": recipe.id, "name": recipe.name, "ingredients": recipe.ingredients})
+        return json.dumps(
+            {
+                "success": False,
+                "error": f"Recette avec l'ID {recipe_id} introuvable."
+            },
+            ensure_ascii=False,
+        )
+
+    return json.dumps(
+        {
+            "success": True,
+            "recipe": {
+                "id": recipe.id,
+                "name": recipe.name,
+                "ingredients": recipe.ingredients,
+            },
+        },
+        ensure_ascii=False,
+    )
